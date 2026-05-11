@@ -16,52 +16,52 @@ from utils import cut_detection, eventLog_parsing, start_end_iterators, utils
 
 
 class DPIM():
-    def __init__(self) -> None:
-        self.epsilon: float = 1.0
-        self.fit_trehsold: float = 0.95
-        self.lower_bound: int = 0
-        self.upper_bound: int = 0
-        self.DP: bool = True
+    def __init__(self, epsilonI, fit_tresholdI, lower_boundI, upper_boundI, DPI, logName) -> None:
+        self.epsilon: float = epsilonI #1.0
+        self.fit_trehsold: float = fit_tresholdI #0.95
+        self.lower_bound: int = lower_boundI #0
+        self.upper_bound: int = upper_boundI #0
+        self.DP: bool = DPI #True
+        self.logName = logName #added LogName so that DPIM could be startet without the command line tool. (Thorwin Bergholz)
     
     
     def initialization(self) -> None:
         # initialize the parser
-        parser = argparse.ArgumentParser(description='Differential private Inductive Miner for process discovery. Generates a PST, that preserves DP, from an event log.',
-                                            formatter_class=argparse.RawTextHelpFormatter, 
-                                            epilog='Example usage:\npython3 main.py "path/to/eventlog.xes" -e 1.0 -l 5 -u 32')
+        #parser = argparse.ArgumentParser(description='Differential private Inductive Miner for process discovery. Generates a PST, that preserves DP, from an event log.',
+        #                                    formatter_class=argparse.RawTextHelpFormatter, 
+        #                                    epilog='Example usage:\npython3 main.py "path/to/eventlog.xes" -e 1.0 -l 5 -u 32')
         
         # arguments
-        parser.add_argument('eventlog', type=str, help='Path to the input event log file.')
-        parser.add_argument('-e', '--epsilon', type=float, default=1.0, help='Epsilon parameter for differential privacy. Default is 1.0.')
-        parser.add_argument('-l', '--lower', type=int, default=0, help='Lower bound for the uniformly random choice for the number of DFRs.')
-        parser.add_argument('-u', '--upper', type=int, default=0, help='Upper bound for the uniformly random choice for the number of DFRs.')
-        parser.add_argument('-t,', '--threshold', type=float, default=0.95, help='Set the threshold for the rejection sampler. Default is 0.95.')
-        parser.add_argument('--no-dp', action='store_true', default=False, help='Use epsilon to infinity.')
+        #parser.add_argument('eventlog', type=str, help='Path to the input event log file.')
+        #parser.add_argument('-e', '--epsilon', type=float, default=1.0, help='Epsilon parameter for differential privacy. Default is 1.0.')
+        #parser.add_argument('-l', '--lower', type=int, default=0, help='Lower bound for the uniformly random choice for the number of DFRs.')
+        #parser.add_argument('-u', '--upper', type=int, default=0, help='Upper bound for the uniformly random choice for the number of DFRs.')
+        #parser.add_argument('-t,', '--threshold', type=float, default=0.95, help='Set the threshold for the rejection sampler. Default is 0.95.')
+        #parser.add_argument('--no-dp', action='store_true', default=False, help='Use epsilon to infinity.')
 
         # Customizing the help message
-        parser._positionals.title = "Required Arguments"
-        parser._optionals.title = "Optional Arguments"
-        parser._positionals.description = "It is required to give an event log, to be able to generate a PST."
-        parser._optionals.description = "All values have defaults. However, it is recommended to give a value for epsilon, as the default is 1.0. \n" \
-                                            "The lower and upper bounds are used to determine the number of DFRs, so the default may be too excessive. \n"
+        #parser._positionals.title = "Required Arguments"
+        #parser._optionals.title = "Optional Arguments"
+        #parser._positionals.description = "It is required to give an event log, to be able to generate a PST."
+        #parser._optionals.description = "All values have defaults. However, it is recommended to give a value for epsilon, as the default is 1.0. \n" \
+        #                                    "The lower and upper bounds are used to determine the number of DFRs, so the default may be too excessive. \n"
 
         # parse the arguments
-        args = parser.parse_args()
+        #args = parser.parse_args()
 
         # set the arguments
-        if args.no_dp:
-            self.DP = False
+        if self.DP == False: #restore functionality with different if clause because argument cam know from input parameters 
             self.epsilon = 100000
 
         # get the file path
-        file_path = args.eventlog
+        file_path = "./DPIM/input/" + self.logName
         file_path = file_path.replace('"', '')
         name, extension = os.path.splitext(file_path)
 
         # set the epsilon to which the operations shouls sum up to
-        self.epsilon = args.epsilon
+        #self.epsilon = args.epsilon
         # set the threshold for the rejection sampler
-        self.fit_trehsold = args.threshold
+        #self.fit_trehsold = args.threshold
 
         # check type of file and go to the correct function
         if  extension.lower() == '.csv':
@@ -87,22 +87,24 @@ class DPIM():
             permutations, traceList, num_acts = eventLog_parsing.xesFile().createPermutations_XES(event_log=event_log)
 
         # set the lower and upper bounds
-        if args.lower < num_acts or args.lower >= args.upper or args.lower > (num_acts**2) -1:
+        if self.lower_bound < num_acts or self.lower_bound >= self.upper_bound or self.lower_bound > (num_acts**2) -1: #Changed sanitization so that it works with input parameters. (Thorwin Bergholz)
             self.lower_bound = num_acts
-        else:
-            self.lower_bound = args.lower
+        #else:
+        #    self.lower_bound = args.lower
 
-        if args.upper > (num_acts**2) -1 or args.upper <= args.lower or args.upper < num_acts:
+        if self.upper_bound > (num_acts**2) -1 or self.upper_bound <= self.lower_bound or self.upper_bound < num_acts:
             self.upper_bound = (num_acts**2) -1
-        else:
-            self.upper_bound = args.upper
+        #else:
+        #    self.upper_bound = args.upper
 
         # create the process tree
         tree = self.create_tree(permutations=permutations, traceList=traceList, epsilon=self.epsilon, event_log=event_log)
         
         if tree is not False:
             gviz = pt_visualizer.apply(tree, parameters={pt_visualizer.Variants.WO_DECORATION.value.Parameters.FORMAT: "svg"})
-            pt_visualizer.view(gviz)
+            #pt_visualizer.view(gviz)
+            outputFile = open("./DPIM/output/output_dpim_run.dot", "w") #changed output to printing the .dot file so that it works as worker (Thorwin Bergholz)
+            outputFile.write(gviz.source) #output it to the output directory (Thorwin Bergholz)
         
         return
 
@@ -526,5 +528,4 @@ class PostProcessing:
         return tree
 
 
-if __name__ == "__main__":
-    DPIM().initialization()
+
