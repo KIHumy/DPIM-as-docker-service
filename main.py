@@ -16,13 +16,14 @@ from utils import cut_detection, eventLog_parsing, start_end_iterators, utils
 
 
 class DPIM():
-    def __init__(self, epsilonI, fit_tresholdI, lower_boundI, upper_boundI, DPI, logName) -> None:
+    def __init__(self, epsilonI, fit_tresholdI, lower_boundI, upper_boundI, DPI, logName, instructionId) -> None:
         self.epsilon: float = epsilonI #1.0
         self.fit_trehsold: float = fit_tresholdI #0.95
         self.lower_bound: int = lower_boundI #0
         self.upper_bound: int = upper_boundI #0
         self.DP: bool = DPI #True
         self.logName = logName #added LogName so that DPIM could be startet without the command line tool. (Thorwin Bergholz)
+        self.instructionId = instructionId #added instruction ID so that the algorithm can generate correct output names (Thorwin Bergholz)
     
     
     def initialization(self) -> None:
@@ -103,8 +104,7 @@ class DPIM():
         if tree is not False:
             gviz = pt_visualizer.apply(tree, parameters={pt_visualizer.Variants.WO_DECORATION.value.Parameters.FORMAT: "svg"})
             #pt_visualizer.view(gviz)
-            outputFile = open("./DPIM/output/output_dpim_run.dot", "w") #changed output to printing the .dot file so that it works as worker (Thorwin Bergholz)
-            outputFile.write(gviz.source) #output it to the output directory (Thorwin Bergholz)
+            pm4py.objects.process_tree.exporter.variants.ptml.apply(tree= tree, output_path= "./DPIM/output/output_dpim_run_" + self.instructionId + ".ptml") #changed output to generating the .ptml file so that it works as worker (Thorwin Bergholz)
         
         return
 
