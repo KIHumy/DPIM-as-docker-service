@@ -29,10 +29,10 @@ def mainEntrypoint():
         time.sleep(5)
 
 def collectRequirementsForAlgo():
-    epsilonR = {"name":"epsilon", "lowerBound":"0.02", "upperBound":None, "autoAdept":True, "type":"float"} #has to be > 0.01
-    fit_thresholdR = {"name":"fit_threshold", "lowerBound":"0.0", "upperBound":"1.0", "autoAdept":True, "type":"float"}
-    lower_boundR = {"name":"lower_bound", "lowerBound":"0", "upperBound":None, "autoAdept":False, "type":"int"}
-    upper_boundR = {"name":"upper_bound", "lowerBound":"0", "upperBound":None, "autoAdept":False, "type":"int"}
+    epsilonR = {"name":"epsilon", "lowerBound":"0.02", "upperBound":None, "autoAdept":True, "autoStart": 1.0, "autoSigma": 0.5, "type":"float"} #has to be > 0.01
+    fit_thresholdR = {"name":"fit_threshold", "lowerBound":"0.0", "upperBound":"1.0", "autoAdept":True,"autoStart": 0.5, "autoSigma": 0.25, "type":"float"}
+    lower_boundR = {"name":"lower_bound", "lowerBound":"0", "upperBound":None, "autoAdept":False, "autoStart": None, "autoSigma": None, "type":"int"}
+    upper_boundR = {"name":"upper_bound", "lowerBound":"0", "upperBound":None, "autoAdept":False, "autoStart": None, "autoSigma": None, "type":"int"}
     dPR = {"name":"dP", "value":"True", "type":"bool"}
     #logName = {"name":"logName", "value":"someString", "description":"This tring should be a the name of an event log.", "type":"string"}
     algoVariables = [epsilonR, fit_thresholdR, lower_boundR, upper_boundR, dPR]
@@ -43,11 +43,11 @@ def startInstructionHandler(instruction):
     if instruction["instruction"] == "start_n_test":
         print("Accessed n_test function.", flush=True)
         requests.post("http://cliandanalyzer:8000/result/status", json={**algoIdentity, "instructionId":instruction["instructionId"], "status":"network_stable", "fileId":""})
-    if instruction == {"instruction":"send_requirements"}:
+    if instruction["instruction"] == "send_requirements":
         print("Accessed requirements function.", flush=True)
         jsonRequirements = collectRequirementsForAlgo()
         requests.post("http://cliandanalyzer:8000/myRequirements", json=jsonRequirements)
-    if instruction["instruction"] == "comparison":
+    if instruction["instruction"] == "comparison" or instruction["instruction"] == "autoCompare":
         print("Accessed Template function.", flush=True)
         algoDictionary = instruction.get("payload")
         epsilon = 1.0
@@ -70,7 +70,10 @@ def startInstructionHandler(instruction):
                 logName = inputValues["value"]
         main.DPIM(epsilon, fit_threshold, lower_bound, upper_bound, DP, logName, instruction["instructionId"], algoIdentity["identification"]["id"], instruction["fileId"]).initialization()
         print("Sending the result of the template function to the server.", flush= True)
-        requests.post("http://cliandanalyzer:8000/result/status", json={**algoIdentity, "instructionId":instruction["instructionId"], "status":"finished_privacy_enhancing_algorithm", "fileId":instruction["fileId"]})
+        if instruction["instruction"] == "comparison":
+            requests.post("http://cliandanalyzer:8000/result/status", json={**algoIdentity, "instructionId":instruction["instructionId"], "status":"finished_privacy_enhancing_algorithm", "fileId":instruction["fileId"]})
+        else:
+            requests.post("http://cliandanalyzer:8000/result/status", json={**algoIdentity, "instructionId":instruction["instructionId"], "status":"finished_privacy_enhancing_algorithm_for_auto_compare", "fileId":instruction["fileId"]})
     return
 
 if __name__ == "__main__":
