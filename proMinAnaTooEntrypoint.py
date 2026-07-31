@@ -31,8 +31,8 @@ def mainEntrypoint():
 def collectRequirementsForAlgo():
     epsilonR = {"name":"epsilon", "lowerBound":"0.02", "upperBound":None, "autoAdept":True, "autoStart": 1.0, "autoSigma": 0.5, "type":"float"} #has to be > 0.01
     fit_thresholdR = {"name":"fit_threshold", "lowerBound":"0.0", "upperBound":"1.0", "autoAdept":True,"autoStart": 0.5, "autoSigma": 0.25, "type":"float"}
-    lower_boundR = {"name":"lower_bound", "lowerBound":"0", "upperBound":None, "autoAdept":False, "autoStart": None, "autoSigma": None, "type":"int"}
-    upper_boundR = {"name":"upper_bound", "lowerBound":"0", "upperBound":None, "autoAdept":False, "autoStart": None, "autoSigma": None, "type":"int"}
+    lower_boundR = {"name":"lower_bound", "lowerBound":"0", "upperBound":None, "autoAdept":True, "autoStart": 1, "autoSigma": 20, "type":"int"}
+    upper_boundR = {"name":"upper_bound", "lowerBound":"0", "upperBound":None, "autoAdept":True, "autoStart": 1, "autoSigma": 20, "type":"int"}
     dPR = {"name":"dP", "value":"True", "type":"bool"}
     #logName = {"name":"logName", "value":"someString", "description":"This tring should be a the name of an event log.", "type":"string"}
     algoVariables = [epsilonR, fit_thresholdR, lower_boundR, upper_boundR, dPR]
