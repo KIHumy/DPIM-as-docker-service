@@ -3,7 +3,7 @@ import time
 import json
 import socket
 import main
-
+#this file was written by Thorwin Bergholz
 algoName = "DPIM"
 algoId = socket.gethostname()
 algoIdentity = {"identification":{"name":algoName, "id":algoId}}
@@ -29,10 +29,10 @@ def mainEntrypoint():
         time.sleep(5)
 
 def collectRequirementsForAlgo():
-    epsilonR = {"name":"epsilon", "lowerBound":"0.02", "upperBound":None, "autoAdept":True, "autoStart": 1.0, "autoSigma": 0.5, "type":"float"} #has to be > 0.01
-    fit_thresholdR = {"name":"fit_threshold", "lowerBound":"0.0", "upperBound":"1.0", "autoAdept":True,"autoStart": 0.5, "autoSigma": 0.25, "type":"float"}
-    lower_boundR = {"name":"lower_bound", "lowerBound":"0", "upperBound":None, "autoAdept":True, "autoStart": 1, "autoSigma": 20, "type":"int"}
-    upper_boundR = {"name":"upper_bound", "lowerBound":"0", "upperBound":None, "autoAdept":True, "autoStart": 1, "autoSigma": 20, "type":"int"}
+    epsilonR = {"name":"epsilon", "lowerBound":"0.02", "upperBound":None, "autoAdept":True, "autoStart": 1.0, "autoSigma": 0.5, "keyWordBoundUpper": None, "keyWordBoundLower": None, "relativeInitial": None, "choice": None, "type":"float"} #has to be > 0.01
+    fit_thresholdR = {"name":"fit_threshold", "lowerBound":"0.0", "upperBound":"1.0", "autoAdept":True,"autoStart": 0.5, "autoSigma": 0.25, "keyWordBoundUpper": None, "keyWordBoundLower": None, "relativeInitial": None, "choice": None, "type":"float"}
+    lower_boundR = {"name":"lower_bound", "lowerBound":"0", "upperBound":None, "autoAdept":True, "autoStart": 1, "autoSigma": 20, "keyWordBoundUpper": None, "keyWordBoundLower": None, "relativeInitial": None, "choice": None, "type":"int"}
+    upper_boundR = {"name":"upper_bound", "lowerBound":"0", "upperBound":None, "autoAdept":True, "autoStart": 1, "autoSigma": 20, "keyWordBoundUpper": None, "keyWordBoundLower": None, "relativeInitial": None, "choice": None, "type":"int"}
     dPR = {"name":"dP", "value":"True", "type":"bool"}
     #logName = {"name":"logName", "value":"someString", "description":"This tring should be a the name of an event log.", "type":"string"}
     algoVariables = [epsilonR, fit_thresholdR, lower_boundR, upper_boundR, dPR]
@@ -68,7 +68,14 @@ def startInstructionHandler(instruction):
                 DP = inputValues["value"]
             if inputValues["name"] == "logName":
                 logName = inputValues["value"]
-        main.DPIM(epsilon, fit_threshold, lower_bound, upper_bound, DP, logName, instruction["instructionId"], algoIdentity["identification"]["id"], instruction["fileId"]).initialization()
+        maximalTryNumber = 3
+        tryNumber = 0
+        while tryNumber < maximalTryNumber:
+            try:
+                main.DPIM(epsilon, fit_threshold, lower_bound, upper_bound, DP, logName, instruction["instructionId"], algoIdentity["identification"]["id"], instruction["fileId"]).initialization()
+                tryNumber = maximalTryNumber
+            except:
+                tryNumber = tryNumber + 1
         print("Sending the result of the template function to the server.", flush= True)
         if instruction["instruction"] == "comparison":
             requests.post("http://cliandanalyzer:8000/result/status", json={**algoIdentity, "instructionId":instruction["instructionId"], "status":"finished_privacy_enhancing_algorithm", "fileId":instruction["fileId"]})
